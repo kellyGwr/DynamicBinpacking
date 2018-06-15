@@ -1,18 +1,22 @@
 #!/usr/bin/python
+# exec(open("binpacking.py").read())
+
 import numpy as np
 from gurobipy import *
 
 # create a list of n Items to be packed
 n = 40  # number of Items
 m = 6   # number of Bins
-ell = 5 # number of Scenarios
+ell = 6 # number of Scenarios
+hell = 3
 Items = range(n)       # these are the set of objects
 Bins = range(m)        # .
 Scenarios = range(ell) # .
 # The sample distribution of weights:
 np.random.seed(1)
-wtrain = 0.2 + 0.2*np.random.random( (n,ell) )
-wtest = 0.2 + 0.2*np.random.random( (n,ell) )
+wtrain = np.concatenate((0.1 + 0.1*np.random.random( (n,hell) ), 0.2 + 0.2*np.random.random( (n,hell) )), axis = 1)
+wtest = np.concatenate((0.1 + 0.1*np.random.random( (n,hell) ), 0.2 + 0.2*np.random.random( (n,hell) )), axis = 1)
+
 c = 1 # Capacity of the bins (sam for all)
 
 # Create initial model
@@ -31,7 +35,7 @@ yzupper = m.addVar(vtype=GRB.CONTINUOUS, lb = 0, ub = 100, name = "yzupper")
 # The objective is to minimize the total number of items packed, yzupper should be zero!
 m.setObjective( (quicksum(x[i,b] for i in Items for b in Bins) - 100*yzupper - yupper - zupper ), GRB.MAXIMIZE)
 # Experimental: Set the number of jobs to assign and search for the one with different values for sum Z
-fixsumx = m.addConstr( (quicksum(x[i,b] for i in Items for b in Bins) == 18), name = "sumX")
+fixsumx = m.addConstr( (quicksum(x[i,b] for i in Items for b in Bins) == 14), name = "sumX")
 
 # You can only assign an item once to a bin
 onlyonce_constraint = m.addConstrs((quicksum(x[i,b] for b in Bins) <= 1 for i in Items), name = "onlyassignonce")
@@ -72,18 +76,33 @@ m.setObjective(zupper + yupper + 100.0*yzupper, GRB.MINIMIZE)
 m.optimize()
 m.printAttr("x")
 
-solutionZ = m.getAttr("x",z)
-print(solutionZ)
+statscount = 0
+statsmincount = 0
+numberofitemsinbin = 0
+numberofbins = 0
 for s in Scenarios:
+    print("Scenario",s)
     for b in Bins:
         lebin = []
         lebinremove = []
+        print("Bin", b)
+        binchanged = 0
         for i in Items:
-            if (solutionX[i,b]>0.1):
+            if (x[i,b].X == 1):
                 lebin = np.append(lebin, wtest[i,s])
-                if (solutionZ[i,b,s]>0.1):
+                if (y[i,b,s].X == 1):
                     lebinremove = np.append(lebinremove, 1)
+                    binchanged = 1
                 else:
                     lebinremove = np.append(lebinremove, 0)
+        numberofitemsinbin = numberofitemsinbin + len(lebin)
+        numberofbins = numberofbins + 1
         print(lebin)
-        print(lebinremove)
+        if (binchanged == 1):
+            statscount = statscount + 1
+            if (np.argmin(lebin) == np.argmax(lebinremove)):
+                statsmincount = statsmincount + 1
+
+print("percetange of time we select the smallest to move", 100*statsmincount/statscount)
+
+print("probability of choosing the smallest bin is", numberofbins/numberofitemsinbin)
