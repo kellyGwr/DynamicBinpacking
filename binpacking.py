@@ -3,6 +3,8 @@
 import numpy as np
 from gurobipy import *
 
+# test
+
 # create a list of n Items to be packed
 n = 40  # number of Items
 m = 6   # number of Bins
