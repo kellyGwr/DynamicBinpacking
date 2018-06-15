@@ -31,7 +31,7 @@ yzupper = m.addVar(vtype=GRB.CONTINUOUS, lb = 0, ub = 100, name = "yzupper")
 # The objective is to minimize the total number of items packed, yzupper should be zero!
 m.setObjective( (quicksum(x[i,b] for i in Items for b in Bins) - 100*yzupper - yupper - zupper ), GRB.MAXIMIZE)
 # Experimental: Set the number of jobs to assign and search for the one with different values for sum Z
-fixsumx = m.addConstr( (quicksum(x[i,b] for i in Items for b in Bins) == 19), name = "sumX")
+fixsumx = m.addConstr( (quicksum(x[i,b] for i in Items for b in Bins) == 18), name = "sumX")
 
 # You can only assign an item once to a bin
 onlyonce_constraint = m.addConstrs((quicksum(x[i,b] for b in Bins) <= 1 for i in Items), name = "onlyassignonce")
@@ -71,3 +71,19 @@ m.setObjective(zupper + yupper + 100.0*yzupper, GRB.MINIMIZE)
 
 m.optimize()
 m.printAttr("x")
+
+solutionZ = m.getAttr("x",z)
+print(solutionZ)
+for s in Scenarios:
+    for b in Bins:
+        lebin = []
+        lebinremove = []
+        for i in Items:
+            if (solutionX[i,b]>0.1):
+                lebin = np.append(lebin, wtest[i,s])
+                if (solutionZ[i,b,s]>0.1):
+                    lebinremove = np.append(lebinremove, 1)
+                else:
+                    lebinremove = np.append(lebinremove, 0)
+        print(lebin)
+        print(lebinremove)
