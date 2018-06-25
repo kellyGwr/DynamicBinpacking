@@ -17,6 +17,7 @@ np.random.seed(1)
 wtrain = np.concatenate((0.1 + 0.1*np.random.random( (n,hell) ), 0.2 + 0.2*np.random.random( (n,hell) )), axis = 1)
 wtest = np.concatenate((0.1 + 0.1*np.random.random( (n,hell) ), 0.2 + 0.2*np.random.random( (n,hell) )), axis = 1)
 
+
 #wtrain1 = 0.2 + 0.2*np.random.random( (int(0.5*n),ell) )
 #wtrain2 = 0.3 + 0.2*np.random.random( (int(0.5*n),ell) )
 #wtrain = np.r_[wtrain1,wtrain2]
